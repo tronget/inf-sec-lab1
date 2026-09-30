@@ -41,4 +41,4 @@ flask-cors==6.0.5               # explicit CORS allow-list
 
 # --- Production WSGI server ------------------------------------------------
 gunicorn==23.0.0
-packaging==24.2
+packaging==26.3
