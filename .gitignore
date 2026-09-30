@@ -1,0 +1,44 @@
+# --- Secrets & local configuration (never commit) --------------------------
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets/
+
+# --- Python ----------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.eggs/
+
+# --- Virtual environments --------------------------------------------------
+.venv/
+venv/
+env/
+
+# --- Databases & runtime artefacts -----------------------------------------
+*.db
+*.sqlite
+*.sqlite3
+instance/
+*.log
+
+# --- Test & tooling output -------------------------------------------------
+.pytest_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+bandit-report.json
+bandit.sarif
+pip-audit.json
+dependency-check-report.*
+
+# --- OS / editors ----------------------------------------------------------
+.DS_Store
+.idea/
+.vscode/

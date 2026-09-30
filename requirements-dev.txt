@@ -1,0 +1,42 @@
+# ---------------------------------------------------------------------------
+# Development / CI dependencies: tests, linting, SAST and SCA tooling.
+#
+#   pip install -r requirements.txt -r requirements-dev.txt
+#
+# As with `click` in requirements.txt, several security fixes in the toolchain
+# are only published for Python >= 3.10 (Python 3.9 is end-of-life). The markers
+# below install the patched release on every supported runtime - the CI matrix
+# (3.11/3.12), the Docker image and production - and keep the newest release
+# that still supports 3.9 for the legacy local development interpreter.
+# See SECURITY.md for the full rationale.
+# ---------------------------------------------------------------------------
+-r requirements.txt
+
+# --- Tests & coverage ------------------------------------------------------
+pytest==9.0.3; python_version >= "3.10"
+pytest==8.4.2; python_version < "3.10"
+pytest-cov==7.1.0
+coverage==7.10.7
+
+# --- Lint & formatting -----------------------------------------------------
+ruff==0.16.6
+
+# --- SAST: Static Application Security Testing -----------------------------
+bandit[toml,sarif]==1.8.6
+
+# --- SCA: Software Composition Analysis ------------------------------------
+pip-audit==2.9.0
+
+# Transitive dependencies of pip-audit / bandit, pinned so that their security
+# fixes are picked up explicitly instead of being resolved at install time.
+requests==2.33.0; python_version >= "3.10"
+requests==2.32.5; python_version < "3.10"
+urllib3==2.7.0; python_version >= "3.10"
+urllib3==2.6.3; python_version < "3.10"
+msgpack==1.2.1; python_version >= "3.10"
+msgpack==1.1.2; python_version < "3.10"
+filelock==3.20.3; python_version >= "3.10"
+filelock==3.19.1; python_version < "3.10"
+
+# --- Workflow / YAML validation helper -------------------------------------
+PyYAML==6.0.3

@@ -1,0 +1,44 @@
+# ---------------------------------------------------------------------------
+# Runtime dependencies - pinned exactly for reproducible and auditable builds.
+# Audited in CI by pip-audit (SCA job). Keep in sync with requirements-dev.txt.
+#
+# NOTE on `click`: CVE-2026-7246 (command injection in click.edit()) is fixed in
+# click 8.3.3, which requires Python >= 3.10. The marker below therefore installs
+# the patched release on every supported runtime (CI matrix 3.11/3.12, Docker
+# image, production) and keeps the last 3.9-compatible release for the legacy
+# Python 3.9 development interpreter only. This project never calls click.edit(),
+# so the vulnerable code path is unreachable - see SECURITY.md.
+# ---------------------------------------------------------------------------
+
+# --- Web framework ---------------------------------------------------------
+Flask==3.1.3
+Werkzeug==3.1.8
+Jinja2==3.1.6
+MarkupSafe==3.0.3               # escape() - output encoding against XSS
+itsdangerous==2.2.0
+blinker==1.9.0
+click==8.3.3; python_version >= "3.10"
+click==8.1.8; python_version < "3.10"
+
+# --- ORM: parameterised queries / prepared statements (anti-SQLi) ----------
+SQLAlchemy==2.0.52
+
+# --- Authentication --------------------------------------------------------
+PyJWT==2.13.0                   # JWT issuing & verification, HS256 pinned
+bcrypt==5.0.0                   # adaptive password hashing
+
+# --- Request validation ----------------------------------------------------
+pydantic==2.13.5
+pydantic_core==2.46.5
+annotated-types==0.7.0
+typing_extensions==4.16.0
+typing-inspection==0.4.2
+
+# --- Hardening -------------------------------------------------------------
+Flask-Limiter==3.11.0           # brute-force protection / rate limiting
+limits==4.2
+flask-cors==6.0.5               # explicit CORS allow-list
+
+# --- Production WSGI server ------------------------------------------------
+gunicorn==23.0.0
+packaging==24.2
