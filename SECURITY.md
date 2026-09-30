@@ -59,6 +59,7 @@ Python 3.9 is end-of-life. Several dependencies have published security fixes
 | PYSEC-2026-1845 | pytest | 9.0.3 | Python >= 3.10 |
 | PYSEC-2026-2275 | requests | 2.33.0 | Python >= 3.10 |
 | PYSEC-2026-141, PYSEC-2026-142 | urllib3 | 2.7.0 | Python >= 3.10 |
+| GHSA-8988-9cw3-xx77 (CVE-2026-97687), GHSA-gh4c-6fx4-qh6g (CVE-2026-97688), GHSA-vxq7-64xx-v4gw (CVE-2026-97689) | urllib3 | 2.8.0 | Python >= 3.10 |
 | PYSEC-2026-3625 | msgpack | 1.2.1 | Python >= 3.10 |
 | PYSEC-2026-1374, PYSEC-2026-1375 | filelock | 3.20.3 | Python >= 3.10 |
 
@@ -80,7 +81,25 @@ Reachability of the only advisory that touches a *runtime* dependency:
 
 Every other advisory in the table above affects development-only tooling
 (`pytest`, and the transitive dependencies of `pip-audit`), which never runs in
-production.
+production. In particular `urllib3` reaches this project only as a transitive
+dependency of `pip-audit` itself - the service never makes outbound HTTP calls
+and imports no HTTP client
+(`grep -rnE '^(import|from) (urllib|requests|httpx)' app/` returns nothing), so
+the HTTP-client advisories above are unreachable from the service.
+
+### Keeping this list honest
+
+Advisories are published continuously, so a pipeline that was green yesterday
+can legitimately go red today without a single line of code changing - the
+weekly `schedule` trigger in `.github/workflows/ci.yml` exists precisely to
+surface that. When the SCA gate fails:
+
+1. read the finding, do **not** add it to `PY39_EXCEPTIONS` reflexively;
+2. if a fixed release exists for the runtimes we ship on, **bump the pin** -
+   that is the fix;
+3. only when *every* fixed release requires a newer Python than the local
+   development interpreter does the version get an environment marker, with the
+   advisory id recorded in the table above.
 
 **Recommendation:** develop on Python 3.11 or newer. Python 3.9 is supported
 only so that the project runs on the currently installed interpreter.

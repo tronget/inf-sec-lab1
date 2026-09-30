@@ -24,7 +24,7 @@ click==8.1.8; python_version < "3.10"
 SQLAlchemy==2.0.52
 
 # --- Authentication --------------------------------------------------------
-PyJWT==2.13.0                   # JWT issuing & verification, HS256 pinned
+PyJWT==2.15.1                   # JWT issuing & verification, HS256 pinned
 bcrypt==5.0.0                   # adaptive password hashing
 
 # --- Request validation ----------------------------------------------------

@@ -13,6 +13,9 @@ PIP  := $(VENV)/bin/pip
 # exceptions at all. See SECURITY.md for the per-CVE reachability analysis.
 PY39_EXCEPTIONS := \
 	--ignore-vuln PYSEC-2026-2132 \
+	--ignore-vuln GHSA-8988-9cw3-xx77 \
+	--ignore-vuln GHSA-gh4c-6fx4-qh6g \
+	--ignore-vuln GHSA-vxq7-64xx-v4gw \
 	--ignore-vuln PYSEC-2026-1845 \
 	--ignore-vuln PYSEC-2026-3625 \
 	--ignore-vuln PYSEC-2026-1375 \
