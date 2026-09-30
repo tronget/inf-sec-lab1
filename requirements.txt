@@ -32,7 +32,7 @@ pydantic==2.13.5
 pydantic_core==2.46.5
 annotated-types==0.7.0
 typing_extensions==4.16.0
-typing-inspection==0.4.2
+typing-inspection==0.4.4
 
 # --- Hardening -------------------------------------------------------------
 Flask-Limiter==3.11.0           # brute-force protection / rate limiting
