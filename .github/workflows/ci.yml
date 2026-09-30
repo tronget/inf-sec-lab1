@@ -123,7 +123,7 @@ jobs:
 
       - name: Upload coverage artefacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-${{ matrix.python-version }}
           path: |
@@ -183,7 +183,7 @@ jobs:
 
       - name: Upload bandit reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bandit-reports
           path: |
@@ -239,7 +239,7 @@ jobs:
 
       - name: Upload pip-audit reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pip-audit-reports
           path: |
@@ -298,7 +298,7 @@ jobs:
       - name: Upload Dependency-Check report
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: dependency-check-report
           path: dependency-check-report
