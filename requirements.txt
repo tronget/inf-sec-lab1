@@ -40,5 +40,5 @@ limits==4.2
 flask-cors==6.0.5               # explicit CORS allow-list
 
 # --- Production WSGI server ------------------------------------------------
-gunicorn==23.0.0
+gunicorn==26.2.0
 packaging==24.2
