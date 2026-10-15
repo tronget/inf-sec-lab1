@@ -279,7 +279,7 @@ jobs:
         continue-on-error: true
         with:
           project: lab1-secure-rest-api
-          path: "."
+          path: "requirements.txt"
           format: "ALL"
           out: "dependency-check-report"
           args: >
@@ -294,7 +294,7 @@ jobs:
         continue-on-error: true
         with:
           project: lab1-secure-rest-api
-          path: "."
+          path: "requirements.txt"
           format: "ALL"
           out: "dependency-check-report"
           args: >
@@ -328,12 +328,25 @@ jobs:
           )
           print()
 
-          files = sorted(glob.glob("dependency-check-report/*.json"))
-          if not files:
-              print("JSON-отчёт не найден. HTML-отчёт приложен артефактом `dependency-check-report`.")
-              raise SystemExit(0)
+          # format: ALL кладёт рядом несколько .json с разными схемами
+          # (например dependency-check-gitlab.json). Берём именно отчёт DC:
+          # он единственный содержит ключ "dependencies".
+          data = None
+          candidates = ["dependency-check-report/dependency-check-report.json"]
+          candidates += sorted(glob.glob("dependency-check-report/*.json"))
+          for path in candidates:
+              try:
+                  with open(path, encoding="utf-8") as fh:
+                      candidate = json.load(fh)
+              except (OSError, ValueError):
+                  continue
+              if isinstance(candidate, dict) and "dependencies" in candidate:
+                  data = candidate
+                  break
 
-          data = json.load(open(files[0], encoding="utf-8"))
+          if data is None:
+              print("JSON-отчёт не найден. Полный отчёт - в артефакте `dependency-check-report`.")
+              raise SystemExit(0)
 
 
           deps = data.get("dependencies", [])
