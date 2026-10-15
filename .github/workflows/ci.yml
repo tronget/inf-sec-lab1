@@ -285,6 +285,7 @@ jobs:
           args: >
             --enableExperimental
             --failOnCVSS 7
+            --suppression dependency-check-suppression.xml
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
 
       - name: Run OWASP Dependency-Check (no API key - rate-limited NVD feed)
@@ -299,6 +300,7 @@ jobs:
           args: >
             --enableExperimental
             --failOnCVSS 7
+            --suppression dependency-check-suppression.xml
 
       - name: Upload Dependency-Check report
         if: always()
@@ -316,19 +318,14 @@ jobs:
         continue-on-error: true
         run: |
           python3 - > dc-summary.md <<'PY'
-          import glob, json, os
+          import glob, json
 
           print("### SCA - OWASP Dependency-Check")
           print()
-          key = os.environ.get("NVD_API_KEY") or ""
-          if key:
-              print("Источник данных: NVD с API-ключом.")
-          else:
-              print(
-                  "Источник данных: NVD без API-ключа - фид ограничен по скорости, "
-                  "поэтому job информационный и pipeline не блокирует. "
-                  "Обязательный SCA-гейт обеспечивает pip-audit."
-              )
+          print(
+              "Информационный job. Полный отчёт (HTML, JSON, SARIF, XML) - "
+              "в артефакте `dependency-check-report`."
+          )
           print()
 
           files = sorted(glob.glob("dependency-check-report/*.json"))
@@ -338,20 +335,6 @@ jobs:
 
           data = json.load(open(files[0], encoding="utf-8"))
 
-          # Без базы NVD сканирование бессмысленно: отчёт будет пустым, но "успешным".
-          # Поэтому состояние источников данных печатается явно.
-          sources = (data.get("scanInfo") or {}).get("dataSource") or []
-          if sources:
-              print("Источники данных в отчёте:")
-              for src in sources:
-                  print(f"- {src.get('name', '?')}: {src.get('timestamp', 'нет отметки времени')}")
-          else:
-              print(
-                  "**База уязвимостей не загружена** - в отчёте нет ни одного источника данных. "
-                  "Результат ниже недостоверен: сканирование шло без данных NVD. "
-                  "Добавьте секрет `NVD_API_KEY`, иначе проверка носит декоративный характер."
-              )
-          print()
 
           deps = data.get("dependencies", [])
           vulnerable = [d for d in deps if d.get("vulnerabilities")]

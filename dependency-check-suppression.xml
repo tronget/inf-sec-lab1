@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Подавления ложных срабатываний OWASP Dependency-Check.
+
+  Правило: подавляется ровно одно совпадение, с обоснованием и ссылкой на то,
+  чем проверен вывод. Глобальные отключения правил и подавления "на всякий
+  случай" недопустимы - они превращают сканер в декорацию.
+-->
+<suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
+
+  <suppress>
+    <notes><![CDATA[
+      Ложное срабатывание сопоставления по CPE.
+
+      Dependency-Check сопоставил PyJWT с cpe:2.3:a:jwt_project:jwt - это другой
+      продукт, совпало лишь по подстроке "jwt" в имени. Сам сканер оценил
+      уверенность сопоставления как Low.
+
+      CVE-2025-45770 описывает пакет "jwt" версии 5.4.3 ("jwt v5.4.3 was
+      discovered to contain weak encryption"), а не PyJWT 2.15.1. В NVD запись
+      дополнительно помечена как DISPUTED.
+
+      Проверено независимо: для pkg:pypi/pyjwt@2.15.1 ни OSV, ни pip-audit
+      (блокирующий SCA-гейт этого пайплайна) уязвимостей не находят.
+
+      Пересмотреть, если NVD уточнит CPE-соответствие для PyJWT.
+    ]]></notes>
+    <packageUrl regex="true">^pkg:pypi/pyjwt@.*$</packageUrl>
+    <cve>CVE-2025-45770</cve>
+  </suppress>
+
+</suppressions>
