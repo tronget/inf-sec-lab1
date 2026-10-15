@@ -41,7 +41,7 @@ typing-inspection==0.4.2
 # --- Hardening -------------------------------------------------------------
 # brute-force protection / rate limiting
 Flask-Limiter==3.11.0
-limits==4.2
+limits==5.8.0
 # explicit CORS allow-list
 flask-cors==6.0.5
 
