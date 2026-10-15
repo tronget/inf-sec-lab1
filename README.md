@@ -80,14 +80,14 @@ make run                      # http://127.0.0.1:8000
 
 Пайплайн запускается на каждый push и pull request. Блокирующие проверки: `lint` (ruff), `test` (pytest на Python 3.11 и 3.12), **`sast` (bandit)** и **`sca` (pip-audit)**; их результат сводит job `security-gate`.
 
-bandit (SAST):
+**SAST — bandit.** Находок нет, подавлений в коде нет (`skipped: 0`):
 
-<!-- ![SAST — bandit](docs/screenshots/02-sast-bandit.png) -->
+![SAST — bandit](docs/screenshots/01-sast-bandit.png)
 
-pip-audit (SCA):
+**SCA — pip-audit.** Известных уязвимостей в зависимостях нет:
 
-<!-- ![SCA — pip-audit](docs/screenshots/03-sca-pip-audit.png) -->
+![SCA — pip-audit](docs/screenshots/02-sca-pip-audit.png)
 
-Security gate:
+**SCA — OWASP Dependency-Check.** Просканирована 21 зависимость, уязвимостей не найдено. Одно подавление — задокументированное ложное срабатывание сопоставления по CPE, разбор в [`dependency-check-suppression.xml`](dependency-check-suppression.xml):
 
-<!-- ![Security gate](docs/screenshots/04-security-gate.png) -->
+![SCA — OWASP Dependency-Check](docs/screenshots/03-sca-dependency-check.png)
