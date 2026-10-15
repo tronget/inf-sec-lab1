@@ -337,6 +337,22 @@ jobs:
               raise SystemExit(0)
 
           data = json.load(open(files[0], encoding="utf-8"))
+
+          # Без базы NVD сканирование бессмысленно: отчёт будет пустым, но "успешным".
+          # Поэтому состояние источников данных печатается явно.
+          sources = (data.get("scanInfo") or {}).get("dataSource") or []
+          if sources:
+              print("Источники данных в отчёте:")
+              for src in sources:
+                  print(f"- {src.get('name', '?')}: {src.get('timestamp', 'нет отметки времени')}")
+          else:
+              print(
+                  "**База уязвимостей не загружена** - в отчёте нет ни одного источника данных. "
+                  "Результат ниже недостоверен: сканирование шло без данных NVD. "
+                  "Добавьте секрет `NVD_API_KEY`, иначе проверка носит декоративный характер."
+              )
+          print()
+
           deps = data.get("dependencies", [])
           vulnerable = [d for d in deps if d.get("vulnerabilities")]
           print(f"Просканировано зависимостей: **{len(deps)}**")
