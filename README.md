@@ -40,30 +40,6 @@ make run                      # http://127.0.0.1:8000
 | `GET` | `/api/me` | access JWT | Профиль текущего пользователя |
 | `GET` | `/health` | открытый | Проба живости |
 
-Вход возвращает пару токенов:
-
-```bash
-curl -s -X POST http://127.0.0.1:8000/auth/login \
-  -H 'Content-Type: application/json' \
-  -d '{"username":"alice","password":"Alice-Str0ng!Pass"}'
-# → 200 { "token_type": "Bearer", "access_token": "eyJhbGciOiJIUzI1NiJ9...",
-#         "refresh_token": "eyJhbGciOiJIUzI1NiJ9...", "expires_in": 900 }
-```
-
-Access-токен передаётся в защищённые запросы заголовком `Authorization: Bearer <access_token>`:
-
-```bash
-curl -s http://127.0.0.1:8000/api/data -H "Authorization: Bearer $ACCESS"
-# → 200 { "items": [...], "page": 1, "per_page": 20, "total": 0 }
-
-curl -s -X POST http://127.0.0.1:8000/api/data \
-  -H "Authorization: Bearer $ACCESS" -H 'Content-Type: application/json' \
-  -d '{"title":"Заголовок","content":"Текст заметки"}'
-# → 201 { "id": 1, "owner_id": 1, "title": "Заголовок", ... }
-```
-
-Без действительного JWT защищённые методы возвращают `401` с заголовком `WWW-Authenticate: Bearer`. Чужая заметка — `403`. Полная спецификация с телами запросов, ответов и всеми кодами ошибок — в [`docs/API.md`](docs/API.md).
-
 ### Описание реализованных мер защиты
 
 - От **SQLi** код защищён ORM SQLAlchemy 2.x: пользовательские значения уезжают драйверу как bind-параметры и не могут стать частью текста запроса. Конкатенация строк для сборки SQL не используется нигде.
@@ -115,14 +91,3 @@ pip-audit (SCA):
 Security gate:
 
 <!-- ![Security gate](docs/screenshots/04-security-gate.png) -->
-
-Последний успешный запуск пайплайна:
-https://github.com/tronget/inf-sec-lab1/actions/runs/<RUN_ID>
-
-### Дополнительная документация
-
-[`docs/API.md`](docs/API.md) — полная спецификация API · [`docs/THREAT-MODEL.md`](docs/THREAT-MODEL.md) — модель угроз с привязкой к OWASP Top 10 · [`SECURITY.md`](SECURITY.md) — политика раскрытия уязвимостей
-
-### Лицензия
-
-[MIT](LICENSE)
