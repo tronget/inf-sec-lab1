@@ -15,7 +15,7 @@ from sqlalchemy import select
 
 from app.extensions import db
 from app.models import User
-from app.security.tokens import ACCESS_TOKEN_TYPE, TokenError, decode_token
+from app.security.tokens import TYP_ACCESS, TokenError, decode_token
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -47,7 +47,7 @@ def extract_bearer_token(header_value: Optional[str]) -> str:
     return token
 
 
-def authenticate(token_type: str = ACCESS_TOKEN_TYPE) -> Tuple[User, Dict[str, Any]]:
+def authenticate(token_type: str = TYP_ACCESS) -> Tuple[User, Dict[str, Any]]:
     """Validate the request's bearer token and load the owning user."""
     token = extract_bearer_token(request.headers.get("Authorization"))
     claims = decode_token(token, expected_type=token_type)
@@ -60,7 +60,7 @@ def authenticate(token_type: str = ACCESS_TOKEN_TYPE) -> Tuple[User, Dict[str, A
     return user, claims
 
 
-def jwt_required(token_type: str = ACCESS_TOKEN_TYPE) -> Callable[[F], F]:
+def jwt_required(token_type: str = TYP_ACCESS) -> Callable[[F], F]:
     """Decorator factory guarding a view with a JWT of the given ``typ``."""
 
     def decorator(view: F) -> F:

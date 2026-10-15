@@ -11,6 +11,11 @@
 #
 # Every job writes a human-readable summary to the GitHub job summary page,
 # which is what the report screenshots are taken from.
+#
+# Образ раннера закреплён на ubuntu-24.04: с 19.10.2026 метка ubuntu-latest
+# переезжает на Ubuntu 26, и незакреплённый образ может поменяться между
+# прогонами. Все actions держатся на версиях с Node 24 — Node 20 объявлен
+# устаревшим на раннерах GitHub.
 # ---------------------------------------------------------------------------
 name: CI
 
@@ -39,11 +44,11 @@ jobs:
   # -------------------------------------------------------------------------
   lint:
     name: Lint (ruff)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_DEFAULT }}
           cache: pip
@@ -69,15 +74,15 @@ jobs:
   # -------------------------------------------------------------------------
   test:
     name: Tests (Python ${{ matrix.python-version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: pip
@@ -123,7 +128,7 @@ jobs:
 
       - name: Upload coverage artefacts
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: coverage-${{ matrix.python-version }}
           path: |
@@ -134,14 +139,14 @@ jobs:
   # -------------------------------------------------------------------------
   sast:
     name: SAST (bandit)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_DEFAULT }}
           cache: pip
@@ -176,14 +181,14 @@ jobs:
       - name: Upload SARIF to GitHub code scanning
         if: always()
         continue-on-error: true
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: bandit.sarif
           category: bandit
 
       - name: Upload bandit reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: bandit-reports
           path: |
@@ -199,11 +204,11 @@ jobs:
   # -------------------------------------------------------------------------
   sca:
     name: SCA (pip-audit)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_DEFAULT }}
           cache: pip
@@ -239,7 +244,7 @@ jobs:
 
       - name: Upload pip-audit reports
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pip-audit-reports
           path: |
@@ -257,7 +262,7 @@ jobs:
   # -------------------------------------------------------------------------
   sca-owasp:
     name: SCA (OWASP Dependency-Check, best effort)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # The NVD data feed is rate-limited without an API key, so this job is
     # informational and never blocks the pipeline.
     continue-on-error: true
@@ -266,7 +271,7 @@ jobs:
       # passing an empty `--nvdApiKey` would produce a malformed argument list.
       NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Run OWASP Dependency-Check (with NVD API key)
         if: env.NVD_API_KEY != ''
@@ -275,7 +280,7 @@ jobs:
         with:
           project: lab1-secure-rest-api
           path: "."
-          format: "HTML"
+          format: "ALL"
           out: "dependency-check-report"
           args: >
             --enableExperimental
@@ -289,7 +294,7 @@ jobs:
         with:
           project: lab1-secure-rest-api
           path: "."
-          format: "HTML"
+          format: "ALL"
           out: "dependency-check-report"
           args: >
             --enableExperimental
@@ -298,34 +303,81 @@ jobs:
       - name: Upload Dependency-Check report
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: dependency-check-report
           path: dependency-check-report
           retention-days: 30
 
+      # Отчёт разбирается, чтобы в Summary попал фактический результат
+      # сканирования, а не только напоминание про ключ NVD.
       - name: Summary
         if: always()
+        continue-on-error: true
         run: |
-          {
-            echo "### SCA - OWASP Dependency-Check"
-            echo ""
-            echo "Informational job. Add an \`NVD_API_KEY\` repository secret"
-            echo "(https://nvd.nist.gov/developers/request-an-api-key) to make"
-            echo "the NVD download reliable."
-          } >> "$GITHUB_STEP_SUMMARY"
+          python3 - > dc-summary.md <<'PY'
+          import glob, json, os
+
+          print("### SCA - OWASP Dependency-Check")
+          print()
+          key = os.environ.get("NVD_API_KEY") or ""
+          if key:
+              print("Источник данных: NVD с API-ключом.")
+          else:
+              print(
+                  "Источник данных: NVD без API-ключа - фид ограничен по скорости, "
+                  "поэтому job информационный и pipeline не блокирует. "
+                  "Обязательный SCA-гейт обеспечивает pip-audit."
+              )
+          print()
+
+          files = sorted(glob.glob("dependency-check-report/*.json"))
+          if not files:
+              print("JSON-отчёт не найден. HTML-отчёт приложен артефактом `dependency-check-report`.")
+              raise SystemExit(0)
+
+          data = json.load(open(files[0], encoding="utf-8"))
+          deps = data.get("dependencies", [])
+          vulnerable = [d for d in deps if d.get("vulnerabilities")]
+          print(f"Просканировано зависимостей: **{len(deps)}**")
+          print(f"С известными уязвимостями: **{len(vulnerable)}**")
+          print()
+
+          if not vulnerable:
+              print("Уязвимых компонентов не обнаружено.")
+              raise SystemExit(0)
+
+          print("| Компонент | Уязвимость | CVSS |")
+          print("| --- | --- | --- |")
+          rows = 0
+          for dep in vulnerable:
+              name = dep.get("fileName", "?")
+              for v in dep.get("vulnerabilities", []):
+                  score = (v.get("cvssv3") or {}).get("baseScore")
+                  if score is None:
+                      score = (v.get("cvssv2") or {}).get("score", "")
+                  print(f"| {name} | {v.get('name', '?')} | {score} |")
+                  rows += 1
+                  if rows >= 25:
+                      break
+              if rows >= 25:
+                  print()
+                  print("Список усечён до 25 строк, полный отчёт - в артефакте.")
+                  break
+          PY
+          cat dc-summary.md >> "$GITHUB_STEP_SUMMARY"
 
   # -------------------------------------------------------------------------
   secrets-scan:
     name: Secret scanning (gitleaks, best effort)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: gitleaks/gitleaks-action@v2
+      - uses: gitleaks/gitleaks-action@v3
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -333,7 +385,7 @@ jobs:
   # -------------------------------------------------------------------------
   security-gate:
     name: Security gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [lint, test, sast, sca]
     if: always()
     steps:

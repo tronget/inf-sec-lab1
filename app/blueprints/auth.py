@@ -21,8 +21,8 @@ from app.security.decorators import current_user, jwt_required
 from app.security.passwords import dummy_hash, hash_password, verify_password
 from app.security.sanitize import sanitize_text
 from app.security.tokens import (
-    ACCESS_TOKEN_TYPE,
-    REFRESH_TOKEN_TYPE,
+    TYP_ACCESS,
+    TYP_REFRESH,
     create_access_token,
     create_token_pair,
     revoke,
@@ -119,7 +119,7 @@ def login() -> Tuple[Response, int]:
 
 
 @auth_bp.post("/refresh")
-@jwt_required(token_type=REFRESH_TOKEN_TYPE)
+@jwt_required(token_type=TYP_REFRESH)
 def refresh() -> Tuple[Response, int]:
     """Exchange a valid *refresh* token for a fresh access token.
 
@@ -149,7 +149,7 @@ def refresh() -> Tuple[Response, int]:
 
 
 @auth_bp.post("/logout")
-@jwt_required(token_type=ACCESS_TOKEN_TYPE)
+@jwt_required(token_type=TYP_ACCESS)
 def logout() -> Tuple[str, int]:
     """Terminate the session: both the access token and its refresh token die.
 
